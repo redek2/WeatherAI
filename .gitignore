@@ -1,0 +1,19 @@
+# IDE / edytory
+.idea/
+.vscode/
+
+# Środowisko wirtualne
+.venv/
+
+# Bazy danych / cache
+*.sqlite
+*.db
+*.pyc
+__pycache__/
+.cache/
+*.log
+logs/
+
+# Systemowe
+.DS_Store
+Thumbs.db
