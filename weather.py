@@ -1,5 +1,4 @@
 import os
-import requests
 import requests_cache
 import openmeteo_requests
 from retry_requests import retry
@@ -13,8 +12,8 @@ class WeatherService:
 
     def __init__(self):
         # Load configuration and initialize logger
-        self.latitude = CITIES["Cracow"]["lat"]
-        self.longitude = CITIES["Cracow"]["lon"]
+        self.latitude = CITIES["Chorzow"]["lat"]
+        self.longitude = CITIES["Chorzow"]["lon"]
         self.data_folder = DATA_PATH
 
         # Setup cache and retry
@@ -70,11 +69,11 @@ class WeatherService:
 
             report = (
                 f"Weather report for {city_name}:\n"
-                f"Coordinates: {response.Latitude():.2f}°N {response.Longitude():.2f}°E\n"
+                #f"Coordinates: {response.Latitude():.2f}°N {response.Longitude():.2f}°E\n"
                 f"Actual date: {datetime.now().strftime("%Y-%m-%d")}\n"
                 f"Actual time: {datetime.now().strftime("%H:%M:%S")}\n"
                 f"\nLast report's conditions:\n"
-                f"  Measurement ime: {current_time}\n"
+                f"  Measurement time: {current_time}\n"
                 f"  Temperature: {current_temperature_2m:.1f}°C\n"
                 f"  Rain: {current_rain:.1f} mm\n"
                 f"  Cloud cover: {current_cloud_cover:.0f}%\n\n"

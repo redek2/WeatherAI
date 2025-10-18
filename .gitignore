@@ -16,6 +16,7 @@ logs/
 data/
 models/
 responses/
+config.py
 
 # Systemowe
 .DS_Store

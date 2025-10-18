@@ -1,24 +1,25 @@
 import os
 from datetime import datetime
 from llama_cpp import Llama
-from config import MODEL_PATH, SYSTEM_PROMPT, RDATE
+from config import MODEL_SHORT, SYSTEM_PROMPT, USER_PROMPT, RDATE, modelname
 from logger import log
 
 class AIDescription:
     def __init__(self):
-        self.MODEL_SHORT = os.path.join(MODEL_PATH, "gemma-3-12b-it-Q4_K_M.gguf")
+        self.model_short = MODEL_SHORT
         self.WEATHER_FILE = os.path.join("data", "weather_latest.txt")
         self.system_prompt = SYSTEM_PROMPT
+        self.user_prompt = USER_PROMPT
 
     # === Initialize model ===
     def load_model(self) -> Llama:
         """Load local GGUF model using llama.cpp."""
-        if not os.path.exists(self.MODEL_SHORT):
-            raise FileNotFoundError(f"[AI] Model not found at: {self.MODEL_SHORT}")
+        if not os.path.exists(self.model_short):
+            raise FileNotFoundError(f"[AI] Model not found at: {self.model_short}")
 
-        log("[AI] Initializing Gemma-3-12B-it (Q4_K_M) model...", "INFO")
+        log(f"[AI] Initializing {modelname} model...", "INFO")
         model = Llama(
-            model_path=self.MODEL_SHORT,
+            model_path=self.model_short,
             n_ctx=1024,        # context length
             n_gpu_layers=-1,   # auto GPU layers
             verbose=False
@@ -48,11 +49,12 @@ class AIDescription:
         if not weather_data:
             return "[AI] No weather data to analyze."
 
-        full_prompt = (
-            f"System: {self.system_prompt}\n\n"
-            f"User: Opowiedz krótko jaka jest pogoda na podstawie tych danych:\n{weather_data}\n\n"
-            f"Assistant: Based on these data, describe the current weather briefly in Polish language:\n"
-        )
+        self.user_prompt = self.user_prompt + " " + weather_data
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": self.user_prompt}
+        ]
 
         log(f"[AI] Generating weather description started at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}", "INFO")
         t1 = datetime.now()
@@ -61,21 +63,27 @@ class AIDescription:
         response_text = ""
 
         try:
-            output = model(
-                prompt=full_prompt,
-                max_tokens=300,
-                temperature=0.7,
-                top_p=0.95,
-                stop=["User:", "System:"]
-            )
-            #print("[DEBUG] Raw model output: ", output)
-            response = output["choices"][0]["text"].strip()
-            formatted_response = response.replace(". ", "\n")
+            for chunk in model.create_chat_completion(
+                    messages = messages,
+                    max_tokens=3000,
+                    temperature=0.2,
+                    top_p=0.95,
+                    stream=True,
+            ):
+                delta = chunk["choices"][0].get("delta", {})
+                token = delta.get("content", "")
+                print(token, end="", flush=True)
+                response_text += token
+
+            print("\n")
+            response_text = response_text.strip()
+
+            formatted_response = response_text.replace(". ", "\n")
             t2 = datetime.now()
             t3 = t2 - t1
-            t3_round = round(t3.total_seconds() * 1000)
+            #t3_round = round(t3.total_seconds() * 1000)
 
-            log(f"[AI] Generation copleted successfully in {t3} seconds.", "INFO")
+            log(f"[AI] Generation copleted successfully in {round(t3.total_seconds() * 1000)} ms.", "INFO")
             log("[AI] Generation completed successfully.", "SUCCESS")
             return formatted_response or "[AI] Model returned no text."
         except Exception as e:
@@ -106,5 +114,5 @@ class AIDescription:
         weather_data = self.load_weather_data()
         description = self.generate_weather_description(model, weather_data)
         self.save_ai_description(description)
-        log("=== AI Weather Module End ===\n", "INFO")
+        log("=== AI Weather Module End ===", "INFO")
         return description
