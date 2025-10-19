@@ -1,6 +1,7 @@
 import os
 import requests_cache
 import openmeteo_requests
+import geocoder
 from retry_requests import retry
 from datetime import datetime
 from config import DATA_PATH, CITIES, URL, PARAMS, RDATE
@@ -12,8 +13,9 @@ class WeatherService:
 
     def __init__(self):
         # Load configuration and initialize logger
-        self.latitude = CITIES["Chorzow"]["lat"]
-        self.longitude = CITIES["Chorzow"]["lon"]
+        self.latitude = None
+        self.longitude = None
+        self.city_name = None
         self.data_folder = DATA_PATH
 
         # Setup cache and retry
@@ -23,13 +25,63 @@ class WeatherService:
 
         log("WeatherService initialized", "INFO")
 
+    def get_current_location_details(self):
+        try:
+            g = geocoder.ip("me")
+
+            if g.ok and g.latlng and g.city:
+                location_data = {
+                    "name": g.city,
+                    "lat": g.latlng[0],
+                    "lon": g.latlng[1]
+                }
+                log(f"Current location: {location_data['name']}", "INFO")
+                return location_data
+            else:
+                log("Fetching geo data failed (g.ok=False or no data).", "ERROR")
+                return None
+        except Exception as e:
+            log(f"Fetching geo data failed with exception: {e}", "ERROR")
+            return None
+
+    def set_location_from_predefined(self, city_name: str):
+        """Ustawia lokalizację na podstawie predefiniowanego miasta z config.CITIES."""
+        if city_name in CITIES:
+            coords = CITIES[city_name]
+            self.latitude = coords["lat"]
+            self.longitude = coords["lon"]
+            self.city_name = city_name  # <-- KLUCZOWE: Ustawiamy nazwę miasta
+            log(f"Ustawiono lokalizację na predefiniowane miasto: {city_name}", "INFO")
+            return True
+        else:
+            log(f"Nie znaleziono miasta: {city_name} w CITIES", "ERROR")
+            return False
+
+    def set_current_location(self):
+        """Pobiera i ustawia bieżącą lokalizację urządzenia za pomocą geocodera."""
+        location_data = self.get_current_location_details()
+        if location_data:
+            self.latitude = location_data["lat"]
+            self.longitude = location_data["lon"]
+            self.city_name = location_data["name"]  # <-- KLUCZOWE: Ustawiamy nazwę miasta
+            log(f"Ustawiono bieżącą lokalizację: {self.city_name}", "INFO")
+            return True
+        else:
+            log("Nie udało się ustawić bieżącej lokalizacji.", "ERROR")
+            return False
+
     def fetch_weather_data(self):
-        """Fetch weather data from Open-Meteo API using parameters from config."""
+        """Fetch weather data from Open-Meteo API using parameters from config or current localization."""
+        if self.latitude is None or self.longitude is None:
+            log("Localization (latitude/longitude) not specified", "ERROR")
+            return None
+
         try:
             params = PARAMS.copy()
             params["latitude"] = self.latitude
             params["longitude"] = self.longitude
 
+            log(f"Fetching weather data for: {self.city_name} ({self.latitude}, {self.longitude})", "INFO")
             responses = self.client.weather_api(URL, params = params)
             response = responses[0]
             log("Weather data successfully fetched from Open-Meteo API.", "SUCCESS")
@@ -45,10 +97,6 @@ class WeatherService:
             return "No weather data available."
 
         try:
-            latitude = response.Latitude()
-            longitude = response.Longitude()
-            timezone = response.Timezone()
-
             current = response.Current()
             daily = response.Daily()
 
@@ -64,12 +112,14 @@ class WeatherService:
             daily_sunrise = daily.Variables(2).ValuesInt64AsNumpy()
             daily_sunset = daily.Variables(3).ValuesInt64AsNumpy()
 
-            # Report creating
-            city_name = [k for k, v in CITIES.items() if v["lat"] == self.latitude][0]
+            if self.city_name:
+                city_name = self.city_name
+            else:
+                city_name = "Unknown location"
 
             report = (
                 f"Weather report for {city_name}:\n"
-                #f"Coordinates: {response.Latitude():.2f}°N {response.Longitude():.2f}°E\n"
+                f"Coordinates: {response.Latitude():.2f}°N {response.Longitude():.2f}°E\n"
                 f"Actual date: {datetime.now().strftime("%Y-%m-%d")}\n"
                 f"Actual time: {datetime.now().strftime("%H:%M:%S")}\n"
                 f"\nLast report's conditions:\n"

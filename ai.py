@@ -83,7 +83,7 @@ class AIDescription:
             t3 = t2 - t1
             #t3_round = round(t3.total_seconds() * 1000)
 
-            log(f"[AI] Generation copleted successfully in {round(t3.total_seconds() * 1000)} ms.", "INFO")
+            log(f"[AI] Generation copleted successfully in {round(t3.total_seconds())} s.", "INFO")
             log("[AI] Generation completed successfully.", "SUCCESS")
             return formatted_response or "[AI] Model returned no text."
         except Exception as e:

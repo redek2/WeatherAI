@@ -8,26 +8,26 @@ def main():
     # Initialize weather service
     weather_service = WeatherService()
 
+    if not weather_service.set_current_location():
+        log("Fetching current location failed. Using 'Cracow' as default.", "WARNING")
+        weather_service.set_location_from_predefined("Cracow")
+
     # Fetch, process and save weather report
     report = weather_service.get_formatted_report()
 
-    # Print report to console
-    #print("***REPORT***\n", report, "\n***END OF REPORT***")
+    if report and "Error" not in report:
+        # Print report to console
+        print("***REPORT***\n", report, "\n***END OF REPORT***")
 
-    aiDescription = AIDescription()
+        # Run AI Code
+        aiDescription = AIDescription()
+        response = aiDescription.run_ai_weather_description()
 
-    response = aiDescription.run_ai_weather_description()
-
-    # Print response to console
-    #print("***AI RESPONSE***\n\n",response,"\n\n***END OF AI RESPONSE***")
-
+    else:
+        log("Failed to generate report. Please check error logs.", "ERROR")
+        print("Failed to generate report.")
 
     log("=== WeatherAI program ended ===\n", "INFO")
 
-    #print("\n\n\n", modelname, "\n\n\n")
-
 if __name__ == "__main__":
     main()
-
-# W repozytorium ma znaleźć się config_template.py albo config.example.py, z gitignore wykluczyć katalog models/ + ogarnąć README
-# Poprzenosić rzeczy do configa przerużne takie jak model i wogle
