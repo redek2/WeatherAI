@@ -65,7 +65,7 @@ class AIDescription:
         try:
             for chunk in model.create_chat_completion(
                     messages = messages,
-                    max_tokens=3000,
+                    max_tokens=1024,
                     temperature=0.2,
                     top_p=0.95,
                     stream=True,

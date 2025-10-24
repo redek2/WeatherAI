@@ -58,7 +58,7 @@ class WeatherService:
             return False
 
     def set_current_location(self):
-        """Pobiera i ustawia bieżącą lokalizację urządzenia za pomocą geocodera."""
+        """Pobiera i ustawia bieżącą lokalizację urządzenia za pomocą geocodera.
         location_data = self.get_current_location_details()
         if location_data:
             self.latitude = location_data["lat"]
@@ -69,6 +69,7 @@ class WeatherService:
         else:
             log("Nie udało się ustawić bieżącej lokalizacji.", "ERROR")
             return False
+        """
 
     def fetch_weather_data(self):
         """Fetch weather data from Open-Meteo API using parameters from config or current localization."""
