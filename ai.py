@@ -59,7 +59,7 @@ class AIDescription:
         log(f"[AI] Generating weather description started at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}", "INFO")
         t1 = datetime.now()
 
-        print("\n[AI] Generating weather descryption (streaming):\n")
+        #print("\n[AI] Generating weather descryption (streaming):\n")
         response_text = ""
 
         try:
@@ -72,16 +72,15 @@ class AIDescription:
             ):
                 delta = chunk["choices"][0].get("delta", {})
                 token = delta.get("content", "")
-                print(token, end="", flush=True)
+                #print(token, end="", flush=True)
                 response_text += token
 
-            print("\n")
+            #print("\n")
             response_text = response_text.strip()
 
-            formatted_response = response_text.replace(". ", "\n")
+            formatted_response = response_text.replace(". ", ".\n")
             t2 = datetime.now()
             t3 = t2 - t1
-            #t3_round = round(t3.total_seconds() * 1000)
 
             log(f"[AI] Generation copleted successfully in {round(t3.total_seconds())} s.", "INFO")
             log("[AI] Generation completed successfully.", "SUCCESS")
