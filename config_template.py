@@ -14,8 +14,8 @@ SYSTEM_PROMPT = ("Here you can write system prompt to your LLM")
 USER_PROMPT = ("Here you can write user prompt to your LLM")
 
 backslash = chr(92)
-modelname = MODEL_SHORT.removeprefix(r"C:\Users\redek\PycharmProjects\WeatherAI\models" + backslash)
-modelname = modelname.removesuffix(".gguf") # Model name used in logs
+# Ta linia automatycznie wyciągnie nazwę pliku z MODEL_SHORT
+modelname = os.path.basename(MODEL_SHORT).removesuffix(".gguf")
 
 # Creating folders if they don't exist
 os.makedirs(DATA_PATH, exist_ok=True)
