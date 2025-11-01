@@ -1,4 +1,3 @@
-# main.py
 from ai import AIDescription
 from weather import WeatherService
 from logger import log
@@ -14,8 +13,8 @@ def run_weather_pipeline() -> str:
     weather_service = WeatherService()
 
     if not weather_service.set_current_location():
-        log("Fetching current location failed. Using 'Cracow' as default.", "WARNING")
-        weather_service.set_location_from_predefined("Cracow")
+        log("Fetching current location failed. Using 'Poraj' as default.", "WARNING")
+        weather_service.set_location_from_predefined("Poraj")
 
     # Fetch, process and save weather report
     report = weather_service.get_formatted_report()

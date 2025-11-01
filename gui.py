@@ -1,6 +1,5 @@
 import queue
 import customtkinter as ctk
-from tkinter import scrolledtext
 import threading
 from queue import Queue
 from main import run_weather_pipeline
